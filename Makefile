@@ -22,16 +22,18 @@ clear:
 	rm -rf server/hy2/config/config.toml
 	rm -rf server/nginx/conf/acme.conf
 	rm -rf server/xray/config/config.json
+	rm -rf server/sing-box/config/config.json
 	rm -rf .env
 
 # 自动从 .env 中提取所有变量名并拼接成 $VAR1,$VAR2 的格式
 VARS_EXTRACTED := $(shell grep -v '^#' .env | cut -d= -f1 | sed 's/^/$$/' | paste -sd, -)
 
 template:
-	-mkdir -p server/hy2/config server/nginx/conf server/xray/config
+	-mkdir -p server/hy2/config server/nginx/conf server/xray/config server/sing-box/config
 	envsubst '$(VARS_EXTRACTED)' < server/hy2/config/config.toml.template > server/hy2/config/config.toml
 	envsubst '$(VARS_EXTRACTED)' < server/nginx/acme.conf.template > server/nginx/conf/acme.conf
 	envsubst '$(VARS_EXTRACTED)' < server/xray/config/config.json.template > server/xray/config/config.json
+	envsubst '$(VARS_EXTRACTED)' < server/sing-box/config/config.json.template > server/sing-box/config/config.json
 
 issue_cert:
 	~/.acme.sh/acme.sh --issue --force \
@@ -60,3 +62,6 @@ up-hy2:
 
 up-xray:
 	docker compose -f server/xray/docker-compose.yml up -d
+
+up-singbox:
+	docker compose -f server/sing-box/docker-compose.yml up -d

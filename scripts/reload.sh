@@ -13,7 +13,9 @@ compose="docker compose"
 $compose -f ${ROOT_DIR}/server/nginx/docker-compose.yml down
 $compose -f ${ROOT_DIR}/server/hy2/docker-compose.yml down
 $compose -f ${ROOT_DIR}/server/xray/docker-compose.yml down
+$compose -f ${ROOT_DIR}/server/sing-box/docker-compose.yml down
 
 $compose -f ${ROOT_DIR}/server/nginx/docker-compose.yml up -d
 $compose -f ${ROOT_DIR}/server/hy2/docker-compose.yml up -d
 $compose -f ${ROOT_DIR}/server/xray/docker-compose.yml up -d
+$compose -f ${ROOT_DIR}/server/sing-box/docker-compose.yml up -d

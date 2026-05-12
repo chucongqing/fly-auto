@@ -1,0 +1,12 @@
+services:
+  sing-box:
+    image: ${SINGBOX_IMAGE:-ghcr.io/sagernet/sing-box:latest}
+    container_name: sing-box
+    restart: always
+    network_mode: host
+    volumes:
+      - ./config:/etc/sing-box
+      - /etc/ssl:/etc/ssl
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+    command: ["run", "-c", "/etc/sing-box/config.json"]

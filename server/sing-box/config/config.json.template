@@ -1,0 +1,32 @@
+{
+  "log": {
+    "level": "info"
+  },
+  "inbounds": [
+    {
+      "type": "tuic",
+      "tag": "tuic-in",
+      "listen": "::",
+      "listen_port": $SINGBOX_TUIC_PORT,
+      "users": [
+        {
+          "uuid": "$SINGBOX_TUIC_UUID",
+          "password": "$SINGBOX_TUIC_PASSWORD"
+        }
+      ],
+      "congestion_control": "bbr",
+      "tls": {
+        "enabled": true,
+        "server_name": "$MYSITE",
+        "certificate_path": "/etc/ssl/cert.pem",
+        "key_path": "/etc/ssl/key.pem"
+      }
+    }
+  ],
+  "outbounds": [
+    {
+      "type": "freedom",
+      "tag": "direct"
+    }
+  ]
+}
