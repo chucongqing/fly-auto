@@ -1,0 +1,15 @@
+[Unit]
+Description=Hysteria 2 Service
+Documentation=https://hysteria.network/
+After=network.target
+
+[Service]
+Type=simple
+User=root
+ExecStart=/usr/local/bin/hysteria server -c /usr/local/etc/hysteria/config.toml
+Restart=on-failure
+RestartSec=5s
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

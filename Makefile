@@ -25,6 +25,12 @@ clear:
 	rm -rf server/sing-box/config/config.json
 	rm -rf .env
 
+clear-systemd:
+	rm -rf /usr/local/etc/xray/config.json
+	rm -rf /usr/local/etc/hysteria/config.toml
+	rm -rf /usr/local/etc/sing-box/config.json
+	rm -f /etc/nginx/conf.d/acme.conf
+
 # 自动从 .env 中提取所有变量名并拼接成 $VAR1,$VAR2 的格式
 VARS_EXTRACTED := $(shell grep -v '^#' .env | cut -d= -f1 | sed 's/^/$$/' | paste -sd, -)
 
@@ -65,3 +71,79 @@ up-xray:
 
 up-singbox:
 	docker compose -f server/sing-box/docker-compose.yml up -d
+
+# =============================================================================
+# systemd targets (for low-end VPS without Docker)
+# =============================================================================
+
+install-bin:
+	chmod +x $(CUR_DIR)/scripts/install-bin.sh
+	$(CUR_DIR)/scripts/install-bin.sh
+
+install-systemd:
+	chmod +x $(CUR_DIR)/scripts/install-systemd.sh
+	$(CUR_DIR)/scripts/install-systemd.sh
+
+uninstall-systemd:
+	chmod +x $(CUR_DIR)/scripts/uninstall-systemd.sh
+	$(CUR_DIR)/scripts/uninstall-systemd.sh
+
+sys-template:
+	-mkdir -p /usr/local/etc/xray /usr/local/etc/hysteria /usr/local/etc/sing-box
+	-mkdir -p /etc/nginx/conf.d
+	cp server/xray/config/config.json /usr/local/etc/xray/config.json
+	cp server/hy2/config/config.toml /usr/local/etc/hysteria/config.toml
+	cp server/sing-box/config/config.json /usr/local/etc/sing-box/config.json
+	cp server/nginx/conf/acme.conf /etc/nginx/conf.d/acme.conf
+	nginx -t || true
+
+start:
+	systemctl start nginx xray hy2 sing-box || true
+
+stop:
+	systemctl stop nginx xray hy2 sing-box || true
+
+restart:
+	systemctl restart nginx xray hy2 sing-box || true
+
+status:
+	@systemctl status nginx --no-pager || true
+	@systemctl status xray --no-pager || true
+	@systemctl status hy2 --no-pager || true
+	@systemctl status sing-box --no-pager || true
+
+start-nginx:
+	systemctl start nginx
+
+stop-nginx:
+	systemctl stop nginx
+
+restart-nginx:
+	systemctl restart nginx
+
+start-xray:
+	systemctl start xray
+
+stop-xray:
+	systemctl stop xray
+
+restart-xray:
+	systemctl restart xray
+
+start-hy2:
+	systemctl start hy2
+
+stop-hy2:
+	systemctl stop hy2
+
+restart-hy2:
+	systemctl restart hy2
+
+start-singbox:
+	systemctl start sing-box
+
+stop-singbox:
+	systemctl stop sing-box
+
+restart-singbox:
+	systemctl restart sing-box
