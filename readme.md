@@ -304,6 +304,10 @@ docker run --rm ghcr.io/xtls/xray-core x25519
 | `make up-xray` | 仅启动 Xray 容器 |
 | `make up-hy2` | 仅启动 Hysteria 2 容器 |
 | `make up-singbox` | 仅启动 sing-box 容器 |
+| `make restart-docker-nginx` | 仅重启 Nginx 容器（应用配置变更） |
+| `make restart-docker-xray` | 仅重启 Xray 容器（应用配置变更） |
+| `make restart-docker-hy2` | 仅重启 Hysteria 2 容器（应用配置变更） |
+| `make restart-docker-singbox` | 仅重启 sing-box 容器（应用配置变更） |
 
 ### systemd 模式
 
@@ -424,6 +428,15 @@ sudo sysctl -w net.ipv4.ip_unprivileged_port_start=0
 ### 修改配置后生效
 
 **Docker 模式**：
+
+只改了单个服务的配置（例如 Hysteria 2）：
+
+```bash
+make template              # 重新生成配置（ harmless，不影响运行中的服务）
+make restart-docker-hy2    # 只重启 Hysteria 2 容器，应用新配置
+```
+
+如果同时修改了多个服务，或者不确定哪些改了，可以直接全部重启：
 
 ```bash
 make template

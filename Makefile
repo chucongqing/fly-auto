@@ -72,6 +72,19 @@ up-xray:
 up-singbox:
 	docker compose -f server/sing-box/docker-compose.yml up -d
 
+# Restart individual Docker containers to apply config changes
+restart-docker-nginx:
+	docker compose -f server/nginx/docker-compose.yml restart
+
+restart-docker-hy2:
+	docker compose -f server/hy2/docker-compose.yml restart
+
+restart-docker-xray:
+	docker compose -f server/xray/docker-compose.yml restart
+
+restart-docker-singbox:
+	docker compose -f server/sing-box/docker-compose.yml restart
+
 # =============================================================================
 # systemd targets (for low-end VPS without Docker)
 # =============================================================================
