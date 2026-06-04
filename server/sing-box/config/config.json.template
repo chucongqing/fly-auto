@@ -27,6 +27,38 @@
     {
       "type": "freedom",
       "tag": "direct"
+    },
+    {
+      "type": "socks",
+      "tag": "warp",
+      "server": "$SINGBOX_WARP_SERVER",
+      "server_port": $SINGBOX_WARP_PORT
     }
-  ]
+  ],
+  "route": {
+    "rules": [
+      {
+        "action": "sniff"
+      },
+      {
+        "domain_suffix": [
+          "google.com",
+          "googleapis.com",
+          "googleusercontent.com",
+          "gstatic.com"
+        ],
+        "action": "route",
+        "outbound": "warp"
+      },
+      {
+        "domain_suffix": [
+          "openai.com",
+          "chatgpt.com"
+        ],
+        "action": "route",
+        "outbound": "warp"
+      }
+    ],
+    "final": "direct"
+  }
 }

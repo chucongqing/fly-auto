@@ -260,6 +260,9 @@ sudo make clear-systemd    # 清除复制到系统路径的配置文件
 | `SINGBOX_TUIC_PORT` | TUIC 端口 | `20443` |
 | `SINGBOX_TUIC_UUID` | TUIC 用户 UUID | — |
 | `SINGBOX_TUIC_PASSWORD` | TUIC 密码 | — |
+| `HY2_WARP_ADDR` | Hysteria 2 WARP SOCKS5 地址 | `127.0.0.1:40000` |
+| `SINGBOX_WARP_SERVER` | sing-box WARP SOCKS5 服务器 | `127.0.0.1` |
+| `SINGBOX_WARP_PORT` | sing-box WARP SOCKS5 端口 | `40000` |
 | `XRAY_DOWNLOAD_URL` | Xray 二进制下载地址（systemd） | `.zip` 格式 |
 | `HY2_DOWNLOAD_URL` | Hysteria 2 二进制下载地址（systemd） | 单个二进制 |
 | `SINGBOX_DOWNLOAD_URL` | sing-box 二进制下载地址（systemd） | `.tar.gz` 格式 |
@@ -318,6 +321,82 @@ docker run --rm ghcr.io/xtls/xray-core x25519
 | `make start-xray` / `stop-xray` / `restart-xray` | 管理 Xray |
 | `make start-hy2` / `stop-hy2` / `restart-hy2` | 管理 Hysteria 2 |
 | `make start-singbox` / `stop-singbox` / `restart-singbox` | 管理 sing-box |
+
+---
+
+## 解锁 Google Gemini / ChatGPT（WARP 分流）
+
+如果你的 VPS IP 被 Google 标记为"送中"（访问 Gemini 提示地区不支持，或 Google 搜索定位显示为国内），可以通过 **Cloudflare WARP** 对特定域名流量进行局部代理分流，而不影响普通流量的直连速度。
+
+### 原理
+
+1. 在 VPS 本地运行 WARP（SOCKS5 模式，默认端口 `40000`）。
+2. Hysteria 2 开启 **协议嗅探 (Protocol Sniffing)**，从 TLS SNI 中还原域名，解决客户端以 IP 连接导致的域名分流失效问题。
+3. 通过 **ACL 规则**，只将 Google / Gemini / OpenAI 相关流量转发给本地 WARP；其余流量仍然直连。
+
+### 配置说明
+
+项目模板已内置相关配置，运行 `make template` 后会自动生成：
+
+**Hysteria 2**
+
+- **`[sniff]`** 段：启用 DPI，将 IP 请求还原为域名请求。
+- **`[[outbounds]]`** 段：定义 `direct_out`（直连）和 `warp_proxy`（SOCKS5 到 WARP）。
+- **`[acl]`** 段：按域名后缀分流。
+
+> **ACL 语法陷阱**：Hysteria 2 的语法是 `outbound_name(matcher)`，**不是** `outbound(matcher, outbound_name)`。
+
+**sing-box**
+
+- **`route.rules`** 中第一条 `{ "action": "sniff" }`：启用协议嗅探，从 TLS SNI 还原域名。
+- **`outbounds`** 中添加 `{ "type": "socks", "tag": "warp", ... }`：SOCKS5 出站到本地 WARP。
+- **`route.rules`** 后续规则通过 `domain_suffix` 匹配 Google / OpenAI 域名，走 `"outbound": "warp"`。
+- **`route.final": "direct"`**：未命中规则的流量默认直连。
+
+> sing-box 的路由规则按数组**顺序匹配**，`sniff` 必须放在第一条，否则域名分流失效。
+
+### 安装 WARP（手动）
+
+在 VPS 上执行以下命令安装 Cloudflare WARP 并启用代理模式：
+
+```bash
+# 安装
+wget -N https://gitlab.com/fscarmen/warp/-/raw/main/menu.sh && bash menu.sh
+
+# 在菜单中选择：5. 安装 CloudFlare Client 并设置为 Proxy 模式
+# 接受条款时输入 y，免费版即可，无需绑定自己的账号
+
+# 验证状态
+warp-cli status          # 应显示 Status update: Connected
+
+# 测试 SOCKS5 代理
+curl -I --socks5-hostname 127.0.0.1:40000 https://www.google.com
+```
+
+### 排查
+
+| 现象 | 可能原因 | 解决 |
+|------|---------|------|
+| Gemini 仍提示地区不支持 | WARP 未运行或路由规则未生效 | 检查 `warp-cli status` 和对应服务日志 |
+| 客户端连接后全是 IP 请求 | 未开启 sniff | Hysteria 确认 `[sniff] enable = true`；sing-box 确认 `route.rules` 第一条为 `{ "action": "sniff" }` |
+| Hysteria 启动报错 `outbound not found` | ACL 语法错误 | 检查是否为 `warp_proxy(suffix:...)` 而非 `outbound(..., warp_proxy)` |
+| sing-box 日志显示域名未匹配到 warp | sniff 顺序不对 | 确认 `sniff` 规则在 `domain_suffix` 规则之前 |
+
+查看实时日志：
+
+```bash
+# Hysteria 2 — Docker 模式
+docker logs -f hy2
+
+# Hysteria 2 — systemd 模式
+journalctl -u hy2 -f
+
+# sing-box — Docker 模式
+docker logs -f sing-box
+
+# sing-box — systemd 模式
+journalctl -u sing-box -f
+```
 
 ---
 

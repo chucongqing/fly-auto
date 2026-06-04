@@ -1,4 +1,4 @@
-listen= $HY2_ADDR
+listen = "$HY2_ADDR"
 
 [tls]
 cert = "/etc/ssl/cert.pem"
@@ -15,3 +15,41 @@ type = "proxy"
 [masquerade.proxy]
 url = "https://www.bing.com/"
 rewriteHost = true
+
+# ========== Protocol Sniffing ==========
+# Enable DPI to restore domain names from TLS SNI when clients connect by IP.
+# This is essential for ACL domain-based routing to work correctly.
+[sniff]
+enable = true
+timeout = "2s"
+rewriteDomain = true
+
+# ========== Outbounds ==========
+[[outbounds]]
+name = "direct_out"
+type = "direct"
+
+[[outbounds]]
+name = "warp_proxy"
+type = "socks5"
+[outbounds.socks5]
+addr = "$HY2_WARP_ADDR"
+
+# ========== ACL Routing ==========
+# Syntax: outbound_name(matcher) — NOT outbound(matcher, outbound_name)
+[acl]
+inline = [
+  # Google / Gemini -> WARP
+  "warp_proxy(suffix:google.com)",
+  "warp_proxy(suffix:gemini.google.com)",
+  "warp_proxy(suffix:googleapis.com)",
+  "warp_proxy(suffix:googleusercontent.com)",
+  "warp_proxy(suffix:gstatic.com)",
+
+  # OpenAI / ChatGPT -> WARP (optional)
+  "warp_proxy(suffix:openai.com)",
+  "warp_proxy(suffix:chatgpt.com)",
+
+  # Everything else -> direct
+  "direct_out(all)"
+]
