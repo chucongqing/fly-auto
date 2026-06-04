@@ -38,7 +38,7 @@
 | **Nginx** | HTTP | 80 | ACME 验证 + HTTP → HTTPS 跳转 |
 | **Xray** | VLESS + REALITY | 443 | 主要代理入口，伪装成目标网站 |
 | **Hysteria 2** | UDP / quic | 10443 | 高速 UDP 代理，抗审查能力强 |
-| **sing-box** | TUIC | 20443 | 基于 QUIC 的代理，低延迟 |
+| **sing-box** | TUIC / AnyTLS | 20443 / 24443 | 基于 QUIC 的代理 / 通用 TLS 代理，低延迟 |
 
 ---
 
@@ -260,6 +260,9 @@ sudo make clear-systemd    # 清除复制到系统路径的配置文件
 | `SINGBOX_TUIC_PORT` | TUIC 端口 | `20443` |
 | `SINGBOX_TUIC_UUID` | TUIC 用户 UUID | — |
 | `SINGBOX_TUIC_PASSWORD` | TUIC 密码 | — |
+| `SINGBOX_ANYTLS_PORT` | AnyTLS 端口 | `24443` |
+| `SINGBOX_ANYTLS_USERNAME` | AnyTLS 用户名 | — |
+| `SINGBOX_ANYTLS_PASSWORD` | AnyTLS 密码 | — |
 | `HY2_WARP_ADDR` | Hysteria 2 WARP SOCKS5 地址 | `127.0.0.1:40000` |
 | `SINGBOX_WARP_SERVER` | sing-box WARP SOCKS5 服务器 | `127.0.0.1` |
 | `SINGBOX_WARP_PORT` | sing-box WARP SOCKS5 端口 | `40000` |

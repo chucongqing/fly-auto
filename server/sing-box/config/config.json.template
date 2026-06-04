@@ -21,6 +21,24 @@
         "certificate_path": "/etc/ssl/cert.pem",
         "key_path": "/etc/ssl/key.pem"
       }
+    },
+    {
+      "type": "anytls",
+      "tag": "anytls-in",
+      "listen": "::",
+      "listen_port": $SINGBOX_ANYTLS_PORT,
+      "users": [
+        {
+          "name": "$SINGBOX_ANYTLS_USERNAME",
+          "password": "$SINGBOX_ANYTLS_PASSWORD"
+        }
+      ],
+      "tls": {
+        "enabled": true,
+        "server_name": "$MYSITE",
+        "certificate_path": "/etc/ssl/cert.pem",
+        "key_path": "/etc/ssl/key.pem"
+      }
     }
   ],
   "outbounds": [
