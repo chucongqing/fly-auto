@@ -41,9 +41,6 @@ template:
 	envsubst '$(VARS_EXTRACTED)' < server/nginx/acme.conf.template > server/nginx/conf/acme.conf
 	envsubst '$(VARS_EXTRACTED)' < server/xray/config/config.json.template > server/xray/config/config.json
 	envsubst '$(VARS_EXTRACTED)' < server/sing-box/config/config.json.template > server/sing-box/config/config.json
-	-[ -d /usr/local/etc/hysteria ] && cp server/hy2/config/config.toml /usr/local/etc/hysteria/config.toml || true
-	-[ -d /usr/local/etc/sing-box ] && cp server/sing-box/config/config.json /usr/local/etc/sing-box/config.json || true
-	-[ -d /etc/nginx/conf.d ] && cp server/nginx/conf/acme.conf /etc/nginx/conf.d/acme.conf || true
 
 issue_cert:
 	~/.acme.sh/acme.sh --issue --force \
