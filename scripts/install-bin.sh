@@ -174,8 +174,27 @@ install_nginx() {
 # =============================================================================
 # 执行安装
 # =============================================================================
-install_hy2
-install_singbox
-install_nginx
+ACTION="${1:-proxies}"
 
-echo "[DONE] All binaries installed."
+case "$ACTION" in
+    nginx)
+        install_nginx
+        echo "[DONE] Nginx installed."
+        ;;
+    proxies)
+        install_hy2
+        install_singbox
+        echo "[DONE] Proxy binaries installed."
+        ;;
+    all)
+        install_hy2
+        install_singbox
+        install_nginx
+        echo "[DONE] All binaries installed."
+        ;;
+    *)
+        echo "Usage: $0 [nginx|proxies|all]"
+        exit 1
+        ;;
+esac
+

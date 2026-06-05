@@ -28,6 +28,8 @@ clear:
 clear-systemd:
 	rm -rf /usr/local/etc/hysteria/config.toml
 	rm -rf /usr/local/etc/sing-box/config.json
+
+clear-nginx-systemd:
 	rm -f /etc/nginx/conf.d/acme.conf
 
 # 自动从 .env 中提取所有变量名并拼接成 $VAR1,$VAR2 的格式
@@ -94,35 +96,48 @@ restart-docker-singbox:
 
 install-bin:
 	chmod +x $(CUR_DIR)/scripts/install-bin.sh
-	$(CUR_DIR)/scripts/install-bin.sh
+	$(CUR_DIR)/scripts/install-bin.sh proxies
+
+install-nginx:
+	chmod +x $(CUR_DIR)/scripts/install-bin.sh
+	$(CUR_DIR)/scripts/install-bin.sh nginx
 
 install-systemd:
 	chmod +x $(CUR_DIR)/scripts/install-systemd.sh
-	$(CUR_DIR)/scripts/install-systemd.sh
+	$(CUR_DIR)/scripts/install-systemd.sh proxies
+
+install-nginx-systemd:
+	chmod +x $(CUR_DIR)/scripts/install-systemd.sh
+	$(CUR_DIR)/scripts/install-systemd.sh nginx
 
 uninstall-systemd:
 	chmod +x $(CUR_DIR)/scripts/uninstall-systemd.sh
-	$(CUR_DIR)/scripts/uninstall-systemd.sh
+	$(CUR_DIR)/scripts/uninstall-systemd.sh proxies
+
+uninstall-nginx-systemd:
+	chmod +x $(CUR_DIR)/scripts/uninstall-systemd.sh
+	$(CUR_DIR)/scripts/uninstall-systemd.sh nginx
 
 sys-template:
 	-mkdir -p /usr/local/etc/hysteria /usr/local/etc/sing-box
-	-mkdir -p /etc/nginx/conf.d
 	cp server/hy2/config/config.toml /usr/local/etc/hysteria/config.toml
 	cp server/sing-box/config/config.json /usr/local/etc/sing-box/config.json
+
+sys-template-nginx:
+	-mkdir -p /etc/nginx/conf.d
 	cp server/nginx/conf/acme.conf /etc/nginx/conf.d/acme.conf
 	nginx -t || true
 
 start:
-	systemctl start nginx hy2 sing-box || true
+	systemctl start hy2 sing-box || true
 
 stop:
-	systemctl stop nginx hy2 sing-box || true
+	systemctl stop hy2 sing-box || true
 
 restart:
-	systemctl restart nginx hy2 sing-box || true
+	systemctl restart hy2 sing-box || true
 
 status:
-	@systemctl status nginx --no-pager || true
 	@systemctl status hy2 --no-pager || true
 	@systemctl status sing-box --no-pager || true
 
@@ -134,6 +149,9 @@ stop-nginx:
 
 restart-nginx:
 	systemctl restart nginx
+
+status-nginx:
+	@systemctl status nginx --no-pager || true
 
 start-hy2:
 	systemctl start hy2

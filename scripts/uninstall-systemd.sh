@@ -2,9 +2,25 @@
 
 set -e
 
-SERVICES="nginx hy2 sing-box"
+ACTION="${1:-proxies}"
 
-echo "[systemd] Stopping and disabling services ..."
+case "$ACTION" in
+    nginx)
+        SERVICES="nginx"
+        ;;
+    proxies)
+        SERVICES="hy2 sing-box"
+        ;;
+    all)
+        SERVICES="nginx hy2 sing-box"
+        ;;
+    *)
+        echo "Usage: $0 [nginx|proxies|all]"
+        exit 1
+        ;;
+esac
+
+echo "[systemd] Stopping and disabling services: $SERVICES ..."
 
 for svc in $SERVICES; do
     if systemctl is-active --quiet "${svc}.service" 2>/dev/null; then

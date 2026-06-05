@@ -138,7 +138,7 @@ make issue_cert  # 申请证书
 make install_cert # 安装证书并设置自动续期
 ```
 
-> **注意**：如果你使用 systemd 模式且系统没有 Docker，`make up-nginx` 需要换成 `make start-nginx`（见下方 systemd 模式说明）。
+> **注意**：如果你使用 systemd 模式且系统没有 Docker，需要单独安装、配置并启动 Nginx：`sudo make install-nginx sys-template-nginx start-nginx`。
 
 ---
 
@@ -188,42 +188,57 @@ SINGBOX_DOWNLOAD_URL=https://github.com/Sagernet/sing-box/releases/download/v1.1
 
 ### 安装并启动
 
+> [!IMPORTANT]
+> Nginx 是一项通用服务，可能在服务器上已经安装并运行了。因此，为了避免破坏已有的 Nginx，下载、配置、启动 Nginx 的命令与代理组件（Hysteria 2, sing-box）是分开的。
+
+**1. 部署代理服务（Hysteria 2 & sing-box）**
+
 ```bash
-# 1. 下载并安装所有二进制（nginx 会自动用包管理器安装）
+# 下载并安装代理二进制到 /usr/local/bin
 sudo make install-bin
 
-# 2. 安装 systemd service 文件并启用开机自启
+# 安装代理 systemd service 文件并启用开机自启
 sudo make install-systemd
 
-# 3. 将配置文件复制到 systemd 服务使用的系统路径
+# 将代理配置文件复制到系统路径
 sudo make sys-template
 
-# 4. 启动所有服务
+# 启动代理服务
 sudo make start
 ```
 
-等价的一键执行：
+**2. 部署 Nginx（如果服务器尚未安装或需要重新配置/启动）**
 
 ```bash
-sudo make install-bin install-systemd sys-template start
+# 下载并安装 Nginx (如果系统中已有，会自动跳过)
+sudo make install-nginx
+
+# 安装 Nginx 的 systemd service 文件 (如果使用系统自带的 Nginx，此步通常不需要)
+# sudo make install-nginx-systemd
+
+# 配置 Nginx (复制 acme.conf 到 /etc/nginx/conf.d/)
+sudo make sys-template-nginx
+
+# 启动 Nginx
+sudo make start-nginx
 ```
 
 ### 管理服务
 
 ```bash
-# 全部服务
-sudo make start        # 启动
-sudo make stop         # 停止
-sudo make restart      # 重启
-sudo make status       # 查看状态
+# 管理代理服务 (不影响 Nginx)
+sudo make start        # 启动代理
+sudo make stop         # 停止代理
+sudo make restart      # 重启代理
+sudo make status       # 查看代理状态
 
-# 单个服务
+# 管理 Nginx 服务
 sudo make start-nginx      # 启动 Nginx
 sudo make stop-nginx       # 停止 Nginx
 sudo make restart-nginx    # 重启 Nginx
-sudo make start-xray       # 启动 Xray
-sudo make stop-xray        # 停止 Xray
-sudo make restart-xray     # 重启 Xray
+sudo make status-nginx     # 查看 Nginx 状态
+
+# 管理单个代理服务
 sudo make start-hy2        # 启动 Hysteria 2
 sudo make stop-hy2         # 停止 Hysteria 2
 sudo make restart-hy2      # 重启 Hysteria 2
@@ -235,8 +250,13 @@ sudo make restart-singbox  # 重启 sing-box
 ### 卸载 systemd 服务
 
 ```bash
+# 卸载代理服务
 sudo make uninstall-systemd
-sudo make clear-systemd    # 清除复制到系统路径的配置文件
+sudo make clear-systemd    # 清除复制到系统路径的代理配置文件
+
+# 卸载 Nginx 配置或服务 (根据需要选择)
+# sudo make uninstall-nginx-systemd
+sudo make clear-nginx-systemd      # 清除 nginx 代理配置文件
 ```
 
 ---
@@ -316,16 +336,18 @@ docker run --rm ghcr.io/xtls/xray-core x25519
 
 | 命令 | 作用 |
 |------|------|
-| `make install-bin` | 下载并安装所有二进制到 `/usr/local/bin/` |
-| `make install-systemd` | 安装并启用所有 systemd service |
-| `make uninstall-systemd` | 停止、禁用并删除所有 systemd service |
-| `make sys-template` | 复制配置文件到 `/usr/local/etc/` 和 `/etc/nginx/conf.d/` |
-| `make start` | 启动所有 systemd 服务 |
-| `make stop` | 停止所有 systemd 服务 |
-| `make restart` | 重启所有 systemd 服务 |
-| `make status` | 查看所有 systemd 服务状态 |
-| `make start-nginx` / `stop-nginx` / `restart-nginx` | 管理 Nginx |
-| `make start-xray` / `stop-xray` / `restart-xray` | 管理 Xray |
+| `make install-bin` | 下载并安装代理二进制 (hysteria, sing-box) 到 `/usr/local/bin/` |
+| `make install-nginx` | 下载并在系统安装 Nginx |
+| `make install-systemd` | 安装并启用代理 systemd service |
+| `make install-nginx-systemd` | 安装并启用 Nginx systemd service |
+| `make uninstall-systemd` | 停止、禁用并删除代理 systemd service |
+| `make uninstall-nginx-systemd` | 停止、禁用并删除 Nginx systemd service |
+| `make sys-template` | 复制代理配置文件到 `/usr/local/etc/` |
+| `make sys-template-nginx` | 复制 Nginx 配置文件并做语法检查 |
+| `make clear-systemd` | 清理代理配置文件 |
+| `make clear-nginx-systemd` | 清理 Nginx 代理配置文件 |
+| `make start` / `stop` / `restart` / `status` | 管理代理服务 |
+| `make start-nginx` / `stop-nginx` / `restart-nginx` / `status-nginx` | 管理 Nginx 服务 |
 | `make start-hy2` / `stop-hy2` / `restart-hy2` | 管理 Hysteria 2 |
 | `make start-singbox` / `stop-singbox` / `restart-singbox` | 管理 sing-box |
 
@@ -498,7 +520,7 @@ sudo sysctl -w net.ipv4.ip_unprivileged_port_start=0
 `make install_cert` 已经通过 `--reloadcmd` 把重启脚本注册到 acme.sh 中，证书续期后会自动重载所有服务，无需手动干预。
 
 - **Docker 模式**：续期后执行 `./scripts/reload.sh`
-- **systemd 模式**：续期后执行 `systemctl restart nginx xray hy2 sing-box`
+- **systemd 模式**：续期后执行 `systemctl restart nginx hy2 sing-box`
 
 ### 修改配置后生效
 

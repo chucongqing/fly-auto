@@ -12,9 +12,25 @@ if [ -f "$ROOT_DIR/.env" ]; then
     set +a
 fi
 
-SERVICES="nginx hy2 sing-box"
+ACTION="${1:-proxies}"
 
-echo "[systemd] Installing service files ..."
+case "$ACTION" in
+    nginx)
+        SERVICES="nginx"
+        ;;
+    proxies)
+        SERVICES="hy2 sing-box"
+        ;;
+    all)
+        SERVICES="nginx hy2 sing-box"
+        ;;
+    *)
+        echo "Usage: $0 [nginx|proxies|all]"
+        exit 1
+        ;;
+esac
+
+echo "[systemd] Installing service files for: $SERVICES ..."
 
 for svc in $SERVICES; do
     SRC="$ROOT_DIR/systemd/${svc}.service.template"
