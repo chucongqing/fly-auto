@@ -81,12 +81,17 @@ addr = "127.0.0.1:40000"
 # 注意: 不是 outbound(地址, 出站名)，而是 出站名(地址)
 [acl]
 inline = [
-  # 谷歌和 Gemini 相关域名，走 warp_proxy 出站
+  # 谷歌和 Gemini/Google Play 相关域名，走 warp_proxy 出站
   "warp_proxy(suffix:google.com)",
   "warp_proxy(suffix:gemini.google.com)",
   "warp_proxy(suffix:googleapis.com)",
   "warp_proxy(suffix:googleusercontent.com)",
   "warp_proxy(suffix:gstatic.com)",
+  "warp_proxy(suffix:gvt1.com)",
+  "warp_proxy(suffix:gvt2.com)",
+  "warp_proxy(suffix:gvt3.com)",
+  "warp_proxy(suffix:ggpht.com)",
+  "warp_proxy(suffix:android.com)",
 
   # 顺便解锁一下 ChatGPT (可选)
   "warp_proxy(suffix:openai.com)",

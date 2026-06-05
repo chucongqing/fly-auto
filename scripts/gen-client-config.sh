@@ -235,6 +235,11 @@ if [ "$ENABLE_WARP" = "true" ]; then
           \"googleapis.com\",
           \"googleusercontent.com\",
           \"gstatic.com\",
+          \"gvt1.com\",
+          \"gvt2.com\",
+          \"gvt3.com\",
+          \"ggpht.com\",
+          \"android.com\",
           \"openai.com\",
           \"chatgpt.com\",
           \"gemini.google.com\"

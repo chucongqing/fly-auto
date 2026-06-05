@@ -39,12 +39,17 @@ addr = "$HY2_WARP_ADDR"
 # Syntax: outbound_name(matcher) — NOT outbound(matcher, outbound_name)
 [acl]
 inline = [
-  # Google / Gemini -> WARP
+  # Google / Gemini / Google Play -> WARP
   "warp_proxy(suffix:google.com)",
   "warp_proxy(suffix:gemini.google.com)",
   "warp_proxy(suffix:googleapis.com)",
   "warp_proxy(suffix:googleusercontent.com)",
   "warp_proxy(suffix:gstatic.com)",
+  "warp_proxy(suffix:gvt1.com)",
+  "warp_proxy(suffix:gvt2.com)",
+  "warp_proxy(suffix:gvt3.com)",
+  "warp_proxy(suffix:ggpht.com)",
+  "warp_proxy(suffix:android.com)",
 
   # OpenAI / ChatGPT -> WARP (optional)
   "warp_proxy(suffix:openai.com)",
