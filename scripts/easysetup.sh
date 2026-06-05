@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -eu
 
 # ==========================================
 # Linux 易用性配置一键安装脚本
