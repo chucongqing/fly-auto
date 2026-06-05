@@ -407,6 +407,78 @@ journalctl -u sing-box -f
 
 ---
 
+## 客户端部署（Linux 软路由）
+
+客户端采用 **sing-box** 作为统一代理核心，运行在 Docker 容器中，使用 **TUN 模式**实现透明代理。支持自动测速选路（`urltest`）、手动协议切换（`selector`）、国内流量直连（配合内置的 `geosite/geoip` 中国分流规则）以及可选的 Google / OpenAI WARP 分流。
+
+### 1. 架构概览
+
+```
+           ┌──────────────────────────────────────────────┐
+           │                  客户端 (软路由)              │
+           │  ┌────────────────────────────────────────┐  │
+           │  │             sing-box (TUN)             │  │
+           │  └───────┬──────────────┬──────────┬──────┘  │
+           │          │              │          │         │
+           │       中国流量       WARP 域名   其余流量    │
+           └──────────┼──────────────┼──────────┼─────────┘
+                      │              │          │
+                     直连          WARP SOCKS5  代理 (Proxy)
+                      │              │          │
+                      ▼              ▼          ▼
+                    (网络)       (WARP 客户端)  (Fly-Auto 服务器)
+```
+
+### 2. 快速开始
+
+1. **生成客户端配置文件**：
+   ```bash
+   make client-env
+   ```
+   该命令会复制生成 `.env.client` 配置文件。
+
+2. **编辑 `.env.client`**：
+   根据服务器配置，填写对应的主机名、端口、密码或密钥等。
+   > **注意**：VLESS REALITY 的公钥 `CLIENT_VLESS_REALITY_PUBLIC_KEY` 需要填入服务器上 `xray x25519` 生成的公钥（Public key），而不是私钥。
+
+3. **生成 sing-box 配置文件**：
+   ```bash
+   make client-template
+   ```
+   脚本会根据开关（如 `ENABLE_VLESS`、`ENABLE_HY2` 等）动态渲染并生成 `client/config/config.json`。
+
+4. **启动客户端服务**：
+   ```bash
+   make client-up
+   ```
+   这将在软路由上启动 `sing-box-client` 容器，创建 TUN 虚拟网卡接管系统流量，并启用透明代理。
+
+### 3. 配置说明 (`.env.client`)
+
+| 变量 | 说明 | 默认值 / 示例 |
+|------|------|-------------|
+| `SERVER_ADDR` | 服务端域名或 IP | `www.my-domain.com` |
+| `ENABLE_VLESS` / `ENABLE_HY2` / ... | 协议启用开关 | `true` 或 `false` |
+| `CLIENT_VLESS_REALITY_PUBLIC_KEY` | REALITY 公钥 | 服务器端生成对应的公钥 |
+| `ENABLE_WARP` | 开启 Google/OpenAI 分流到本地 WARP | `false` |
+| `DEFAULT_OUTBOUND` | 默认出站代理协议 | `auto` (延迟最低的协议) 或指定为协议名 (`vless`/`hy2`/`tuic`/`anytls`) |
+| `TUN_INTERFACE` | TUN 虚拟网卡名称 | `tun0` |
+| `TUN_IPV4` | TUN 虚拟 IP 网段 | `172.19.0.1/30` |
+
+### 4. 客户端 Makefile 命令速查
+
+| 命令 | 作用 |
+|------|------|
+| `make client-env` | 初始化客户端 `.env.client` 配置 |
+| `make client-template` | 编译并动态生成 sing-box 客户端 `config.json` |
+| `make client-up` | 在 Docker 中以 TUN 模式启动 sing-box 客户端 |
+| `make client-down` | 停止客户端容器并清理路由表规则 |
+| `make client-restart` | 重启客户端容器 |
+| `make client-logs` | 查看客户端运行日志（用于排查配置或连接问题） |
+| `make client-clear` | 清理生成的客户端配置及 `.env.client` 文件 |
+
+---
+
 ## 常见问题
 
 ### Docker 容器无法绑定 443 端口

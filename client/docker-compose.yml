@@ -1,0 +1,16 @@
+services:
+  sing-box-client:
+    image: ${CLIENT_SINGBOX_IMAGE:-ghcr.io/sagernet/sing-box:1.13.12}
+    container_name: sing-box-client
+    restart: always
+    network_mode: host
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    volumes:
+      - ./config:/etc/sing-box
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+    command: ["run", "-c", "/etc/sing-box/config.json"]

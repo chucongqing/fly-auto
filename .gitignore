@@ -7,3 +7,7 @@ server/hy2/config/config.toml
 server/nginx/conf/acme.conf
 server/xray/config/config.json
 server/sing-box/config/config.json
+
+# Client generated configs
+.env.client
+client/config/config.json

@@ -164,3 +164,31 @@ stop-singbox:
 
 restart-singbox:
 	systemctl restart sing-box
+
+# =============================================================================
+# Client targets (sing-box on Linux soft-router)
+# =============================================================================
+
+client-env:
+	cp .env.client.template .env.client
+
+client-template:
+	chmod +x $(CUR_DIR)/scripts/gen-client-config.sh
+	$(CUR_DIR)/scripts/gen-client-config.sh
+
+client-up:
+	docker compose -f client/docker-compose.yml up -d
+
+client-down:
+	docker compose -f client/docker-compose.yml down
+
+client-restart:
+	docker compose -f client/docker-compose.yml down
+	docker compose -f client/docker-compose.yml up -d
+
+client-logs:
+	docker logs -f sing-box-client
+
+client-clear:
+	rm -rf client/config/config.json
+	rm -rf .env.client
