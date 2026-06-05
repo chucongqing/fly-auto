@@ -151,7 +151,7 @@ install_vimrc() {
 " 1. 基础显示与外观设置
 " ==========================================
 syntax on                   " 开启语法高亮
-set number                  " 显示行号
+"set number                  " 显示行号
 set cursorline              " 高亮显示当前行
 set showmode                " 在底部显示当前模式（Insert、Visual等）
 set showcmd                 " 在状态栏显示正在输入的命令
