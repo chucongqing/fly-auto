@@ -2,7 +2,7 @@
 
 set -e
 
-SERVICES="nginx xray hy2 sing-box"
+SERVICES="nginx hy2 sing-box"
 
 echo "[systemd] Stopping and disabling services ..."
 

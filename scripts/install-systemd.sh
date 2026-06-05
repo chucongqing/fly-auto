@@ -12,7 +12,7 @@ if [ -f "$ROOT_DIR/.env" ]; then
     set +a
 fi
 
-SERVICES="nginx xray hy2 sing-box"
+SERVICES="nginx hy2 sing-box"
 
 echo "[systemd] Installing service files ..."
 

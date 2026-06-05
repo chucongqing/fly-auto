@@ -52,9 +52,9 @@ _download() {
 # =============================================================================
 # 通用安装函数
 # 用法: install_binary <name> <url> <bin_name> [<bin_name_in_archive>]
-#   name               : 显示名称（如 xray）
+#   name               : 显示名称（如 sing-box）
 #   url                : 下载 URL
-#   install_path       : 安装到的完整路径（如 /usr/local/bin/xray）
+#   install_path       : 安装到的完整路径（如 /usr/local/bin/sing-box）
 #   bin_in_archive     : 压缩包内的二进制文件名（可选，默认与 name 同名）
 # =============================================================================
 install_from_url() {
@@ -136,15 +136,6 @@ install_from_url() {
 # 各软件安装
 # =============================================================================
 
-install_xray() {
-    if [ -z "$XRAY_DOWNLOAD_URL" ]; then
-        echo "[SKIP] XRAY_DOWNLOAD_URL not set, skipping xray"
-        return
-    fi
-    install_from_url "xray" "$XRAY_DOWNLOAD_URL" "/usr/local/bin/xray" "xray"
-    mkdir -p /usr/local/etc/xray
-}
-
 install_hy2() {
     if [ -z "$HY2_DOWNLOAD_URL" ]; then
         echo "[SKIP] HY2_DOWNLOAD_URL not set, skipping hysteria"
@@ -183,7 +174,6 @@ install_nginx() {
 # =============================================================================
 # 执行安装
 # =============================================================================
-install_xray
 install_hy2
 install_singbox
 install_nginx

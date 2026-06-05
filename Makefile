@@ -26,7 +26,6 @@ clear:
 	rm -rf .env
 
 clear-systemd:
-	rm -rf /usr/local/etc/xray/config.json
 	rm -rf /usr/local/etc/hysteria/config.toml
 	rm -rf /usr/local/etc/sing-box/config.json
 	rm -f /etc/nginx/conf.d/acme.conf
@@ -106,26 +105,24 @@ uninstall-systemd:
 	$(CUR_DIR)/scripts/uninstall-systemd.sh
 
 sys-template:
-	-mkdir -p /usr/local/etc/xray /usr/local/etc/hysteria /usr/local/etc/sing-box
+	-mkdir -p /usr/local/etc/hysteria /usr/local/etc/sing-box
 	-mkdir -p /etc/nginx/conf.d
-	cp server/xray/config/config.json /usr/local/etc/xray/config.json
 	cp server/hy2/config/config.toml /usr/local/etc/hysteria/config.toml
 	cp server/sing-box/config/config.json /usr/local/etc/sing-box/config.json
 	cp server/nginx/conf/acme.conf /etc/nginx/conf.d/acme.conf
 	nginx -t || true
 
 start:
-	systemctl start nginx xray hy2 sing-box || true
+	systemctl start nginx hy2 sing-box || true
 
 stop:
-	systemctl stop nginx xray hy2 sing-box || true
+	systemctl stop nginx hy2 sing-box || true
 
 restart:
-	systemctl restart nginx xray hy2 sing-box || true
+	systemctl restart nginx hy2 sing-box || true
 
 status:
 	@systemctl status nginx --no-pager || true
-	@systemctl status xray --no-pager || true
 	@systemctl status hy2 --no-pager || true
 	@systemctl status sing-box --no-pager || true
 
@@ -137,15 +134,6 @@ stop-nginx:
 
 restart-nginx:
 	systemctl restart nginx
-
-start-xray:
-	systemctl start xray
-
-stop-xray:
-	systemctl stop xray
-
-restart-xray:
-	systemctl restart xray
 
 start-hy2:
 	systemctl start hy2
