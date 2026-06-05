@@ -43,7 +43,7 @@
   ],
   "outbounds": [
     {
-      "type": "freedom",
+      "type": "direct",
       "tag": "direct"
     },
     {
