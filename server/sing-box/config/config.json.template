@@ -18,6 +18,9 @@
       "tls": {
         "enabled": true,
         "server_name": "$MYSITE",
+        "alpn": [
+          "h3"
+        ],
         "certificate_path": "/etc/ssl/cert.pem",
         "key_path": "/etc/ssl/key.pem"
       }
