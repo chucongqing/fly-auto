@@ -271,10 +271,6 @@ STANDARD_OUTBOUNDS=",
     {
       \"type\": \"block\",
       \"tag\": \"block\"
-    },
-    {
-      \"type\": \"dns\",
-      \"tag\": \"dns-out\"
     }"
 
 # Join all outbounds
