@@ -214,16 +214,16 @@ fi
 # Standard Outbounds
 STANDARD_OUTBOUNDS=",
     {
-      "type": "direct",
-      "tag": "direct"
+      \"type\": \"direct\",
+      \"tag\": \"direct\"
     },
     {
-      "type": "block",
-      "tag": "block"
+      \"type\": \"block\",
+      \"tag\": \"block\"
     },
     {
-      "type": "dns",
-      "tag": "dns-out"
+      \"type\": \"dns\",
+      \"tag\": \"dns-out\"
     }"
 
 # Join all outbounds
@@ -425,4 +425,15 @@ EOF
 
 echo "Client config generated successfully at: $OUTPUT_FILE"
 echo "Hysteria 2 client config generated at: $HY2_OUTPUT_FILE"
+
+# Validate JSON syntax
+if command -v jq >/dev/null 2>&1; then
+  if ! jq empty "$OUTPUT_FILE" >/dev/null 2>&1; then
+    echo "Error: $OUTPUT_FILE is not valid JSON"
+    exit 1
+  fi
+  echo "JSON validation passed."
+else
+  echo "Warning: jq not found, skipping JSON validation"
+fi
 
