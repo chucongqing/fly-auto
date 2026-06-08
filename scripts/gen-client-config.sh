@@ -305,7 +305,7 @@ fi
 
 # Parse DNS servers
 REMOTE_DNS_JSON=$(parse_dns_server "remote-dns" "$REMOTE_DNS" "proxy")
-LOCAL_DNS_JSON=$(parse_dns_server "local-dns" "$LOCAL_DNS" "direct")
+LOCAL_DNS_JSON=$(parse_dns_server "local-dns" "$LOCAL_DNS" "")
 
 # Build config.json
 cat <<EOF > "$OUTPUT_FILE"
