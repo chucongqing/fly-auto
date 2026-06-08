@@ -363,9 +363,7 @@ $LOCAL_DNS_JSON
       "type": "mixed",
       "tag": "mixed-in",
       "listen": "$CLIENT_MIXED_LISTEN",
-      "listen_port": $CLIENT_MIXED_PORT,
-      "sniff": true,
-      "sniff_override_destination": true
+      "listen_port": $CLIENT_MIXED_PORT
     }
   ],
   "outbounds": [
@@ -374,6 +372,9 @@ $LOCAL_DNS_JSON
   ],
   "route": {
     "rules": [
+      {
+        "action": "sniff"
+      },
       {
         "type": "logical",
         "mode": "or",
