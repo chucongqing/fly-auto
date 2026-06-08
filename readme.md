@@ -429,17 +429,22 @@ journalctl -u sing-box -f
 
 ---
 
-## 客户端部署（Linux 软路由）
+## 客户端部署（局域网共享代理）
 
-客户端采用 **sing-box** 作为统一代理核心，运行在 Docker 容器中，使用 **TUN 模式**实现透明代理。支持自动测速选路（`urltest`）、手动协议切换（`selector`）、国内流量直连（配合内置的 `geosite/geoip` 中国分流规则）以及可选的 Google / OpenAI WARP 分流。
+客户端采用 **sing-box** 作为统一代理核心，运行在 Docker 容器中，通过 **Mixed 入站**（同时提供 SOCKS5 和 HTTP 代理）对外提供服务。支持自动测速选路（`urltest`）、手动协议切换（`selector`）、国内流量直连（配合内置的 `geosite/geoip` 中国分流规则）以及可选的 Google / OpenAI WARP 分流。
+
+适合场景：
+- 本机通过 SOCKS5 / HTTP 代理上网。
+- 局域网内其他设备（手机、其他电脑）将网关或代理指向该客户端机器，实现共享代理。
+- 各协议可指向不同服务器（例如 HY2 走 A 服务器，TUIC 走 B 服务器）。
 
 ### 1. 架构概览
 
 ```
            ┌──────────────────────────────────────────────┐
-           │                  客户端 (软路由)              │
+           │                客户端 (共享代理)              │
            │  ┌────────────────────────────────────────┐  │
-           │  │             sing-box (TUN)             │  │
+           │  │      sing-box (Mixed: SOCKS5+HTTP)     │  │
            │  └───────┬──────────────┬──────────┬──────┘  │
            │          │              │          │         │
            │       中国流量       WARP 域名   其余流量    │
@@ -473,19 +478,21 @@ journalctl -u sing-box -f
    ```bash
    make client-up
    ```
-   这将在软路由上启动 `sing-box-client` 容器，创建 TUN 虚拟网卡接管系统流量，并启用透明代理。
+   这将在 Docker 中启动 `sing-box-client` 容器，监听配置的地址和端口（默认 `0.0.0.0:7890`），提供 SOCKS5 和 HTTP 代理服务。
 
 ### 3. 配置说明 (`.env.client`)
 
 | 变量 | 说明 | 默认值 / 示例 |
 |------|------|-------------|
-| `SERVER_ADDR` | 服务端域名或 IP | `www.my-domain.com` |
+| `SERVER_ADDR` | 默认服务端域名或 IP（当某个协议未单独指定时回退使用） | `www.my-domain.com` |
+| `CLIENT_VLESS_SERVER` / `CLIENT_HY2_SERVER` / ... | 各协议独立服务器地址（留空则使用 `SERVER_ADDR`） | — |
+| `CLIENT_HY2_SERVER_NAME` / `CLIENT_TUIC_SERVER_NAME` / ... | 各协议 TLS SNI（留空则使用对应服务器地址） | — |
 | `ENABLE_VLESS` / `ENABLE_HY2` / ... | 协议启用开关 | `true` 或 `false` |
 | `CLIENT_VLESS_REALITY_PUBLIC_KEY` | REALITY 公钥 | 服务器端生成对应的公钥 |
 | `ENABLE_WARP` | 开启 Google/OpenAI 分流到本地 WARP | `false` |
 | `DEFAULT_OUTBOUND` | 默认出站代理协议 | `auto` (延迟最低的协议) 或指定为协议名 (`vless`/`hy2`/`tuic`/`anytls`) |
-| `TUN_INTERFACE` | TUN 虚拟网卡名称 | `tun0` |
-| `TUN_IPV4` | TUN 虚拟 IP 网段 | `172.19.0.1/30` |
+| `CLIENT_MIXED_LISTEN` | Mixed 入站监听地址 | `0.0.0.0`（局域网可连）或 `127.0.0.1`（仅本机） |
+| `CLIENT_MIXED_PORT` | Mixed 入站监听端口 | `7890` |
 
 ### 4. 客户端 Makefile 命令速查
 
@@ -493,8 +500,8 @@ journalctl -u sing-box -f
 |------|------|
 | `make client-env` | 初始化客户端 `.env.client` 配置 |
 | `make client-template` | 编译并动态生成 sing-box 客户端 `config.json` |
-| `make client-up` | 在 Docker 中以 TUN 模式启动 sing-box 客户端 |
-| `make client-down` | 停止客户端容器并清理路由表规则 |
+| `make client-up` | 在 Docker 中启动 sing-box 客户端（Mixed 入站） |
+| `make client-down` | 停止客户端容器 |
 | `make client-restart` | 重启客户端容器 |
 | `make client-logs` | 查看客户端运行日志（用于排查配置或连接问题） |
 | `make client-clear` | 清理生成的客户端配置及 `.env.client` 文件 |

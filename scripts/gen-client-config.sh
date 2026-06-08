@@ -14,6 +14,17 @@ fi
 # Source the env file
 source "$ENV_FILE"
 
+# Resolve per-protocol server addresses (fallback to default SERVER_ADDR)
+CLIENT_VLESS_SERVER="${CLIENT_VLESS_SERVER:-$SERVER_ADDR}"
+CLIENT_HY2_SERVER="${CLIENT_HY2_SERVER:-$SERVER_ADDR}"
+CLIENT_TUIC_SERVER="${CLIENT_TUIC_SERVER:-$SERVER_ADDR}"
+CLIENT_ANYTLS_SERVER="${CLIENT_ANYTLS_SERVER:-$SERVER_ADDR}"
+
+# Resolve per-protocol TLS server names (fallback to corresponding server address)
+CLIENT_HY2_SERVER_NAME="${CLIENT_HY2_SERVER_NAME:-$CLIENT_HY2_SERVER}"
+CLIENT_TUIC_SERVER_NAME="${CLIENT_TUIC_SERVER_NAME:-$CLIENT_TUIC_SERVER}"
+CLIENT_ANYTLS_SERVER_NAME="${CLIENT_ANYTLS_SERVER_NAME:-$CLIENT_ANYTLS_SERVER}"
+
 # Make sure config output directory exists
 mkdir -p "$ROOT_DIR/client/config"
 OUTPUT_FILE="$ROOT_DIR/client/config/config.json"
@@ -52,7 +63,7 @@ if [ "$ENABLE_VLESS" = "true" ]; then
     {
       "type": "vless",
       "tag": "vless",
-      "server": "$SERVER_ADDR",
+      "server": "$CLIENT_VLESS_SERVER",
       "server_port": $CLIENT_VLESS_PORT,
       "uuid": "$CLIENT_VLESS_UUID",
       "flow": "xtls-rprx-vision",
@@ -80,12 +91,12 @@ if [ "$ENABLE_HY2" = "true" ]; then
     {
       "type": "hysteria2",
       "tag": "hy2",
-      "server": "$SERVER_ADDR",
+      "server": "$CLIENT_HY2_SERVER",
       "server_port": $CLIENT_HY2_PORT,
       "password": "$CLIENT_HY2_PASSWORD",
       "tls": {
         "enabled": true,
-        "server_name": "$SERVER_ADDR",
+        "server_name": "$CLIENT_HY2_SERVER_NAME",
         "utls": {
           "enabled": true,
           "fingerprint": "chrome"
@@ -102,14 +113,14 @@ if [ "$ENABLE_TUIC" = "true" ]; then
     {
       "type": "tuic",
       "tag": "tuic",
-      "server": "$SERVER_ADDR",
+      "server": "$CLIENT_TUIC_SERVER",
       "server_port": $CLIENT_TUIC_PORT,
       "uuid": "$CLIENT_TUIC_UUID",
       "password": "$CLIENT_TUIC_PASSWORD",
       "congestion_control": "bbr",
       "tls": {
         "enabled": true,
-        "server_name": "$SERVER_ADDR",
+        "server_name": "$CLIENT_TUIC_SERVER_NAME",
         "alpn": [
           "h3"
         ],
@@ -129,13 +140,13 @@ if [ "$ENABLE_ANYTLS" = "true" ]; then
     {
       "type": "anytls",
       "tag": "anytls",
-      "server": "$SERVER_ADDR",
+      "server": "$CLIENT_ANYTLS_SERVER",
       "server_port": $CLIENT_ANYTLS_PORT,
       "username": "$CLIENT_ANYTLS_USERNAME",
       "password": "$CLIENT_ANYTLS_PASSWORD",
       "tls": {
         "enabled": true,
-        "server_name": "$SERVER_ADDR",
+        "server_name": "$CLIENT_ANYTLS_SERVER_NAME",
         "utls": {
           "enabled": true,
           "fingerprint": "chrome"
@@ -305,15 +316,10 @@ cat <<EOF > "$OUTPUT_FILE"
   },
   "inbounds": [
     {
-      "type": "tun",
-      "tag": "tun-in",
-      "interface_name": "$TUN_INTERFACE",
-      "address": [
-        "$TUN_IPV4"
-      ],
-      "auto_route": true,
-      "strict_route": true,
-      "stack": "system",
+      "type": "mixed",
+      "tag": "mixed-in",
+      "listen": "$CLIENT_MIXED_LISTEN",
+      "listen_port": $CLIENT_MIXED_PORT,
       "sniff": true,
       "sniff_override_destination": true
     }
