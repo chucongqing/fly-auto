@@ -194,7 +194,6 @@ if [ "$ENABLE_ANYTLS" = "true" ]; then
       "tag": "anytls",
       "server": "$CLIENT_ANYTLS_SERVER",
       "server_port": $CLIENT_ANYTLS_PORT,
-      "username": "$CLIENT_ANYTLS_USERNAME",
       "password": "$CLIENT_ANYTLS_PASSWORD",
       "tls": {
         "enabled": true,
