@@ -181,37 +181,37 @@ client-template:
 	$(CUR_DIR)/scripts/gen-client-config.sh
 
 client-up:
-	docker compose -f client/docker-compose.yml up -d
+	docker compose -f client/docker-compose.yml --env-file .env.client up -d
 
 client-down:
-	docker compose -f client/docker-compose.yml down
+	docker compose -f client/docker-compose.yml --env-file .env.client down
 
 client-restart:
-	docker compose -f client/docker-compose.yml down
-	docker compose -f client/docker-compose.yml up -d
+	docker compose -f client/docker-compose.yml --env-file .env.client down
+	docker compose -f client/docker-compose.yml --env-file .env.client up -d
 
 # --- sing-box client ---
 client-start-singbox:
-	docker compose -f client/docker-compose.yml up -d sing-box-client
+	docker compose -f client/docker-compose.yml --env-file .env.client up -d sing-box-client
 
 client-stop-singbox:
-	docker compose -f client/docker-compose.yml stop sing-box-client
+	docker compose -f client/docker-compose.yml --env-file .env.client stop sing-box-client
 
 client-restart-singbox:
-	docker compose -f client/docker-compose.yml restart sing-box-client
+	docker compose -f client/docker-compose.yml --env-file .env.client restart sing-box-client
 
 client-logs-singbox:
 	docker logs -f sing-box-client
 
 # --- hysteria2 client ---
 client-start-hy2:
-	docker compose -f client/docker-compose.yml up -d hysteria2-client
+	docker compose -f client/docker-compose.yml --env-file .env.client up -d hysteria2-client
 
 client-stop-hy2:
-	docker compose -f client/docker-compose.yml stop hysteria2-client
+	docker compose -f client/docker-compose.yml --env-file .env.client stop hysteria2-client
 
 client-restart-hy2:
-	docker compose -f client/docker-compose.yml restart hysteria2-client
+	docker compose -f client/docker-compose.yml --env-file .env.client restart hysteria2-client
 
 client-logs-hy2:
 	docker logs -f hysteria2-client
