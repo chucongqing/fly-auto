@@ -267,10 +267,6 @@ STANDARD_OUTBOUNDS=",
     {
       \"type\": \"direct\",
       \"tag\": \"direct\"
-    },
-    {
-      \"type\": \"block\",
-      \"tag\": \"block\"
     }"
 
 # Join all outbounds
