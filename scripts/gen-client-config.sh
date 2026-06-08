@@ -405,4 +405,24 @@ cat <<EOF > "$OUTPUT_FILE"
 }
 EOF
 
+# ============================================================
+# Generate Hysteria 2 client config (standalone client mode)
+# ============================================================
+HY2_CONFIG_DIR="$ROOT_DIR/client/hy2-config"
+mkdir -p "$HY2_CONFIG_DIR"
+HY2_OUTPUT_FILE="$HY2_CONFIG_DIR/config.yaml"
+
+cat <<EOF > "$HY2_OUTPUT_FILE"
+server: "$CLIENT_HY2_SERVER:$CLIENT_HY2_PORT"
+auth: "$CLIENT_HY2_PASSWORD"
+socks5:
+  listen: "0.0.0.0:$CLIENT_HY2_SOCKS5_PORT"
+http:
+  listen: "0.0.0.0:$CLIENT_HY2_HTTP_PORT"
+tls:
+  sni: "$CLIENT_HY2_SERVER_NAME"
+EOF
+
 echo "Client config generated successfully at: $OUTPUT_FILE"
+echo "Hysteria 2 client config generated at: $HY2_OUTPUT_FILE"
+

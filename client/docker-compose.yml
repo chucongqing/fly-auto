@@ -10,3 +10,16 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
     command: ["run", "-c", "/etc/sing-box/config.json"]
+
+  hysteria2-client:
+    image: ${CLIENT_HY2_IMAGE:-tobyxdd/hysteria:v2.9.2}
+    container_name: hysteria2-client
+    restart: always
+    ports:
+      - "${CLIENT_HY2_SOCKS5_PORT:-7891}:${CLIENT_HY2_SOCKS5_PORT:-7891}"
+      - "${CLIENT_HY2_HTTP_PORT:-7892}:${CLIENT_HY2_HTTP_PORT:-7892}"
+    volumes:
+      - ./hy2-config:/etc/hysteria
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+    command: ["client", "-c", "/etc/hysteria/config.yaml"]

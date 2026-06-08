@@ -431,12 +431,20 @@ journalctl -u sing-box -f
 
 ## 客户端部署（局域网共享代理）
 
-客户端采用 **sing-box** 作为统一代理核心，运行在 Docker 容器中，通过 **Mixed 入站**（同时提供 SOCKS5 和 HTTP 代理）对外提供服务。支持自动测速选路（`urltest`）、手动协议切换（`selector`）、国内流量直连（配合内置的 `geosite/geoip` 中国分流规则）以及可选的 Google / OpenAI WARP 分流。
+客户端部署 **两个独立服务**，均运行在 Docker 容器中：
+
+| 服务 | 协议/功能 | 入站类型 | 默认端口 |
+|------|----------|---------|---------|
+| **sing-box-client** | VLESS / TUIC / AnyTLS 多协议出站，自动测速选路 | Mixed（SOCKS5 + HTTP） | `7890` |
+| **hysteria2-client** | Hysteria 2 原生客户端 | SOCKS5 + HTTP | `7891` / `7892` |
+
+两个服务完全独立，可以单独启动、停止和重启。
 
 适合场景：
 - 本机通过 SOCKS5 / HTTP 代理上网。
-- 局域网内其他设备（手机、其他电脑）将网关或代理指向该客户端机器，实现共享代理。
-- 各协议可指向不同服务器（例如 HY2 走 A 服务器，TUIC 走 B 服务器）。
+- 局域网内其他设备将代理指向该客户端机器，实现共享代理。
+- HY2 和 sing-box 的其余协议分别指向不同服务器（例如 HY2 走 A 服务器，TUIC 走 B 服务器）。
+- 需要单独控制 HY2 或 sing-box 服务的启停。
 
 ### 1. 架构概览
 
@@ -444,16 +452,14 @@ journalctl -u sing-box -f
            ┌──────────────────────────────────────────────┐
            │                客户端 (共享代理)              │
            │  ┌────────────────────────────────────────┐  │
-           │  │      sing-box (Mixed: SOCKS5+HTTP)     │  │
-           │  └───────┬──────────────┬──────────┬──────┘  │
-           │          │              │          │         │
-           │       中国流量       WARP 域名   其余流量    │
-           └──────────┼──────────────┼──────────┼─────────┘
-                      │              │          │
-                     直连          WARP SOCKS5  代理 (Proxy)
-                      │              │          │
-                      ▼              ▼          ▼
-                    (网络)       (WARP 客户端)  (Fly-Auto 服务器)
+           │  │  sing-box-client (Mixed: SOCKS5+HTTP)  │  │
+           │  │  :7890 ──► VLESS / TUIC / AnyTLS       │  │
+           │  └────────────────────────────────────────┘  │
+           │  ┌────────────────────────────────────────┐  │
+           │  │  hysteria2-client (SOCKS5 + HTTP)      │  │
+           │  │  :7891 / :7892 ──► Hysteria 2          │  │
+           │  └────────────────────────────────────────┘  │
+           └──────────────────────────────────────────────┘
 ```
 
 ### 2. 快速开始
@@ -468,17 +474,23 @@ journalctl -u sing-box -f
    根据服务器配置，填写对应的主机名、端口、密码或密钥等。
    > **注意**：VLESS REALITY 的公钥 `CLIENT_VLESS_REALITY_PUBLIC_KEY` 需要填入服务器上 `xray x25519` 生成的公钥（Public key），而不是私钥。
 
-3. **生成 sing-box 配置文件**：
+3. **生成客户端配置文件**：
    ```bash
    make client-template
    ```
-   脚本会根据开关（如 `ENABLE_VLESS`、`ENABLE_HY2` 等）动态渲染并生成 `client/config/config.json`。
+   脚本会同时生成两个配置：
+   - `client/config/config.json` — sing-box 配置（多协议出站 + Mixed 入站）
+   - `client/hy2-config/config.yaml` — Hysteria 2 原生客户端配置（SOCKS5 + HTTP 入站）
 
 4. **启动客户端服务**：
    ```bash
+   # 启动全部客户端服务
    make client-up
+
+   # 或单独控制
+   make client-start-singbox   # 只启动 sing-box
+   make client-start-hy2       # 只启动 hysteria2
    ```
-   这将在 Docker 中启动 `sing-box-client` 容器，监听配置的地址和端口（默认 `0.0.0.0:7890`），提供 SOCKS5 和 HTTP 代理服务。
 
 ### 3. 配置说明 (`.env.client`)
 
@@ -487,24 +499,33 @@ journalctl -u sing-box -f
 | `SERVER_ADDR` | 默认服务端域名或 IP（当某个协议未单独指定时回退使用） | `www.my-domain.com` |
 | `CLIENT_VLESS_SERVER` / `CLIENT_HY2_SERVER` / ... | 各协议独立服务器地址（留空则使用 `SERVER_ADDR`） | — |
 | `CLIENT_HY2_SERVER_NAME` / `CLIENT_TUIC_SERVER_NAME` / ... | 各协议 TLS SNI（留空则使用对应服务器地址） | — |
-| `ENABLE_VLESS` / `ENABLE_HY2` / ... | 协议启用开关 | `true` 或 `false` |
+| `ENABLE_VLESS` / `ENABLE_HY2` / ... | 协议启用开关（控制 sing-box 内的 outbound） | `true` 或 `false` |
 | `CLIENT_VLESS_REALITY_PUBLIC_KEY` | REALITY 公钥 | 服务器端生成对应的公钥 |
 | `ENABLE_WARP` | 开启 Google/OpenAI 分流到本地 WARP | `false` |
-| `DEFAULT_OUTBOUND` | 默认出站代理协议 | `auto` (延迟最低的协议) 或指定为协议名 (`vless`/`hy2`/`tuic`/`anytls`) |
-| `CLIENT_MIXED_LISTEN` | Mixed 入站监听地址 | `0.0.0.0`（局域网可连）或 `127.0.0.1`（仅本机） |
-| `CLIENT_MIXED_PORT` | Mixed 入站监听端口 | `7890` |
+| `DEFAULT_OUTBOUND` | 默认出站代理协议 | `auto` 或指定协议名 |
+| `CLIENT_MIXED_LISTEN` | sing-box Mixed 入站监听地址 | `0.0.0.0` 或 `127.0.0.1` |
+| `CLIENT_MIXED_PORT` | sing-box Mixed 入站端口 | `7890` |
+| `CLIENT_HY2_SOCKS5_PORT` | Hysteria 2 客户端 SOCKS5 端口 | `7891` |
+| `CLIENT_HY2_HTTP_PORT` | Hysteria 2 客户端 HTTP 端口 | `7892` |
 
 ### 4. 客户端 Makefile 命令速查
 
 | 命令 | 作用 |
 |------|------|
 | `make client-env` | 初始化客户端 `.env.client` 配置 |
-| `make client-template` | 编译并动态生成 sing-box 客户端 `config.json` |
-| `make client-up` | 在 Docker 中启动 sing-box 客户端（Mixed 入站） |
-| `make client-down` | 停止客户端容器 |
-| `make client-restart` | 重启客户端容器 |
-| `make client-logs` | 查看客户端运行日志（用于排查配置或连接问题） |
-| `make client-clear` | 清理生成的客户端配置及 `.env.client` 文件 |
+| `make client-template` | 生成 sing-box 和 Hysteria 2 客户端配置 |
+| `make client-up` | 启动全部客户端容器 |
+| `make client-down` | 停止全部客户端容器 |
+| `make client-restart` | 重启全部客户端容器 |
+| `make client-start-singbox` | 只启动 sing-box 客户端 |
+| `make client-stop-singbox` | 只停止 sing-box 客户端 |
+| `make client-restart-singbox` | 只重启 sing-box 客户端 |
+| `make client-logs-singbox` | 查看 sing-box 运行日志 |
+| `make client-start-hy2` | 只启动 Hysteria 2 客户端 |
+| `make client-stop-hy2` | 只停止 Hysteria 2 客户端 |
+| `make client-restart-hy2` | 只重启 Hysteria 2 客户端 |
+| `make client-logs-hy2` | 查看 Hysteria 2 运行日志 |
+| `make client-clear` | 清理所有生成的客户端配置 |
 
 ---
 

@@ -172,7 +172,7 @@ restart-singbox:
 	systemctl restart sing-box
 
 # =============================================================================
-# Client targets (sing-box on Linux soft-router)
+# Client targets (sing-box + hysteria2 standalone clients)
 # =============================================================================
 
 client-env:
@@ -192,9 +192,33 @@ client-restart:
 	docker compose -f client/docker-compose.yml down
 	docker compose -f client/docker-compose.yml up -d
 
-client-logs:
+# --- sing-box client ---
+client-start-singbox:
+	docker compose -f client/docker-compose.yml up -d sing-box-client
+
+client-stop-singbox:
+	docker compose -f client/docker-compose.yml stop sing-box-client
+
+client-restart-singbox:
+	docker compose -f client/docker-compose.yml restart sing-box-client
+
+client-logs-singbox:
 	docker logs -f sing-box-client
+
+# --- hysteria2 client ---
+client-start-hy2:
+	docker compose -f client/docker-compose.yml up -d hysteria2-client
+
+client-stop-hy2:
+	docker compose -f client/docker-compose.yml stop hysteria2-client
+
+client-restart-hy2:
+	docker compose -f client/docker-compose.yml restart hysteria2-client
+
+client-logs-hy2:
+	docker logs -f hysteria2-client
 
 client-clear:
 	rm -rf client/config/config.json
+	rm -rf client/hy2-config/config.yaml
 	rm -rf .env.client
