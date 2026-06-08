@@ -54,6 +54,58 @@ join_by_quotes() {
   done
 }
 
+# Parse DNS servers helper (supports legacy URL and new schemas)
+parse_dns_server() {
+  local tag="$1"
+  local dns_val="$2"
+  local detour="$3"
+  
+  local type=""
+  local server=""
+  local server_port=""
+  local path=""
+  
+  if [[ "$dns_val" =~ ^(tls|https|quic|h3|tcp|udp)://([^/]+)(/.*)?$ ]]; then
+    type="${BASH_REMATCH[1]}"
+    local host_port="${BASH_REMATCH[2]}"
+    path="${BASH_REMATCH[3]}"
+    
+    if [ "$path" = "/" ]; then
+      path=""
+    fi
+    
+    if [[ "$host_port" =~ ^([^:]+):([0-9]+)$ ]]; then
+      server="${BASH_REMATCH[1]}"
+      server_port="${BASH_REMATCH[2]}"
+    else
+      server="$host_port"
+    fi
+  else
+    # Default to udp if no scheme is specified
+    type="udp"
+    if [[ "$dns_val" =~ ^([^:]+):([0-9]+)$ ]]; then
+      server="${BASH_REMATCH[1]}"
+      server_port="${BASH_REMATCH[2]}"
+    else
+      server="$dns_val"
+    fi
+  fi
+
+  # Build JSON block with proper indentation (6 spaces)
+  local json="      {\n        \"tag\": \"$tag\",\n        \"type\": \"$type\",\n        \"server\": \"$server\""
+  if [ -n "$server_port" ]; then
+    json="$json,\n        \"server_port\": $server_port"
+  fi
+  if [ -n "$path" ]; then
+    json="$json,\n        \"path\": \"$path\""
+  fi
+  if [ -n "$detour" ]; then
+    json="$json,\n        \"detour\": \"$detour\""
+  fi
+  json="$json\n      }"
+  printf "%b" "$json"
+}
+
 # 1. Build enabled outbounds JSON array
 OUTBOUNDS_LIST=()
 
@@ -260,6 +312,10 @@ if [ "$ENABLE_WARP" = "true" ]; then
       },"
 fi
 
+# Parse DNS servers
+REMOTE_DNS_JSON=$(parse_dns_server "remote-dns" "$REMOTE_DNS" "proxy")
+LOCAL_DNS_JSON=$(parse_dns_server "local-dns" "$LOCAL_DNS" "direct")
+
 # Build config.json
 cat <<EOF > "$OUTPUT_FILE"
 {
@@ -268,16 +324,8 @@ cat <<EOF > "$OUTPUT_FILE"
   },
   "dns": {
     "servers": [
-      {
-        "tag": "remote-dns",
-        "address": "$REMOTE_DNS",
-        "detour": "proxy"
-      },
-      {
-        "tag": "local-dns",
-        "address": "$LOCAL_DNS",
-        "detour": "direct"
-      },
+$REMOTE_DNS_JSON,
+$LOCAL_DNS_JSON,
       {
         "tag": "block-dns",
         "address": "rcode://success"
