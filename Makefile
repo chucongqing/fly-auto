@@ -32,15 +32,13 @@ clear-systemd:
 clear-nginx-systemd:
 	rm -f /etc/nginx/conf.d/acme.conf
 
-# 自动从 .env 中提取所有变量名并拼接成 $VAR1,$VAR2 的格式
-VARS_EXTRACTED := $(shell grep -v '^#' .env | cut -d= -f1 | sed 's/^/$$/' | paste -sd, -)
-
 template:
 	-mkdir -p server/hy2/config server/nginx/conf server/xray/config server/sing-box/config
-	envsubst '$(VARS_EXTRACTED)' < server/hy2/config/config.toml.template > server/hy2/config/config.toml
-	envsubst '$(VARS_EXTRACTED)' < server/nginx/acme.conf.template > server/nginx/conf/acme.conf
-	envsubst '$(VARS_EXTRACTED)' < server/xray/config/config.json.template > server/xray/config/config.json
-	envsubst '$(VARS_EXTRACTED)' < server/sing-box/config/config.json.template > server/sing-box/config/config.json
+	VARS_EXTRACTED=$$(grep -v '^#' .env | cut -d= -f1 | sed 's/^/$$/' | paste -sd, -) && \
+	envsubst "$$VARS_EXTRACTED" < server/hy2/config/config.toml.template > server/hy2/config/config.toml && \
+	envsubst "$$VARS_EXTRACTED" < server/nginx/acme.conf.template > server/nginx/conf/acme.conf && \
+	envsubst "$$VARS_EXTRACTED" < server/xray/config/config.json.template > server/xray/config/config.json && \
+	envsubst "$$VARS_EXTRACTED" < server/sing-box/config/config.json.template > server/sing-box/config/config.json
 
 issue_cert:
 	~/.acme.sh/acme.sh --issue --force \
@@ -221,4 +219,4 @@ client-logs-hy2:
 client-clear:
 	rm -rf client/config/config.json
 	rm -rf client/hy2-config/config.yaml
-	rm -rf .env.client
+	rm -rf .env.client
