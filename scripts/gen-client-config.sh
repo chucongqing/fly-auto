@@ -325,11 +325,7 @@ cat <<EOF > "$OUTPUT_FILE"
   "dns": {
     "servers": [
 $REMOTE_DNS_JSON,
-$LOCAL_DNS_JSON,
-      {
-        "tag": "block-dns",
-        "address": "rcode://success"
-      }
+$LOCAL_DNS_JSON
     ],
     "rules": [
       {
