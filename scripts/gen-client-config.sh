@@ -324,10 +324,6 @@ $LOCAL_DNS_JSON
     ],
     "rules": [
       {
-        "outbound": "any",
-        "server": "local-dns"
-      },
-      {
         "clash_mode": "direct",
         "server": "local-dns"
       },
@@ -366,6 +362,7 @@ $LOCAL_DNS_JSON
     $ALL_OUTBOUNDS_JSON$WARP_OUTBOUND$STANDARD_OUTBOUNDS
   ],
   "route": {
+    "default_domain_resolver": "local-dns",
     "rules": [
       {
         "action": "sniff"
