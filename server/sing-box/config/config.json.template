@@ -75,14 +75,6 @@
         ],
         "action": "route",
         "outbound": "warp"
-      },
-      {
-        "domain_suffix": [
-          "openai.com",
-          "chatgpt.com"
-        ],
-        "action": "route",
-        "outbound": "warp"
       }
     ],
     "final": "direct"
