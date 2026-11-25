@@ -148,9 +148,10 @@ uninstall-nginx-systemd: ## 卸载 Nginx 的 systemd 服务
 	$(CUR_DIR)/scripts/uninstall-systemd.sh nginx
 
 sys-template: ## 复制 hy2/sing-box 配置到 /usr/local/etc/
-	-mkdir -p /usr/local/etc/hysteria /usr/local/etc/sing-box
+	-mkdir -p /usr/local/etc/hysteria /usr/local/etc/sing-box /usr/local/etc/sing-box/rule-set
 	cp server/hy2/config/config.toml /usr/local/etc/hysteria/config.toml
 	cp server/sing-box/config/config.json /usr/local/etc/sing-box/config.json
+	cp -f server/sing-box/rule-set/*.srs /usr/local/etc/sing-box/rule-set/
 
 sys-template-nginx: ## 复制 acme.conf 到 /etc/nginx/conf.d 并执行 nginx -t
 	-mkdir -p /etc/nginx/conf.d

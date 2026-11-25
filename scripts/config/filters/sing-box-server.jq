@@ -9,7 +9,7 @@
 | .inbounds[1].tls.server_name = $site
 | if ($warp_server == "" or $warp_port == 0) then
     .outbounds |= map(select(.tag != "warp"))
-    | .route.rules |= map(select(.outbound != "warp"))
+    | .route.rules |= map(select((.outbound != "warp") and ((.action != "resolve") or ((.rule_set // []) != ["geosite-google"]))))
   else
     (.outbounds[] | select(.tag == "warp")) |= (.server = $warp_server | .server_port = $warp_port)
   end

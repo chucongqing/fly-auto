@@ -62,19 +62,39 @@
         "action": "sniff"
       },
       {
-        "domain_suffix": [
-          "google.com",
-          "googleapis.com",
-          "googleusercontent.com",
-          "gstatic.com",
-          "gvt1.com",
-          "gvt2.com",
-          "gvt3.com",
-          "ggpht.com",
-          "android.com"
+        "rule_set": [
+          "geosite-youtube"
+        ],
+        "action": "route",
+        "outbound": "direct"
+      },
+      {
+        "rule_set": [
+          "geosite-google"
+        ],
+        "action": "resolve",
+        "strategy": "prefer_ipv6"
+      },
+      {
+        "rule_set": [
+          "geosite-google"
         ],
         "action": "route",
         "outbound": "warp"
+      }
+    ],
+    "rule_set": [
+      {
+        "tag": "geosite-google",
+        "type": "local",
+        "format": "binary",
+        "path": "/usr/local/etc/sing-box/rule-set/geosite-google.srs"
+      },
+      {
+        "tag": "geosite-youtube",
+        "type": "local",
+        "format": "binary",
+        "path": "/usr/local/etc/sing-box/rule-set/geosite-youtube.srs"
       }
     ],
     "final": "direct"
