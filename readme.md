@@ -521,6 +521,8 @@ journalctl -u sing-box -f
 | `DEFAULT_OUTBOUND` | 默认出站代理协议 | `tuic` 或指定协议名 |
 | `CLIENT_MIXED_LISTEN` | sing-box Mixed 入站监听地址 | `0.0.0.0` 或 `127.0.0.1` |
 | `CLIENT_MIXED_PORT` | sing-box Mixed 入站端口 | `7890` |
+| `CLIENT_MIXED2_LISTEN` | 第二 Mixed 入站监听地址（仅走 AnyTLS，需 `ENABLE_ANYTLS=true`） | `0.0.0.0` 或 `127.0.0.1` |
+| `CLIENT_MIXED2_PORT` | 第二 Mixed 入站端口，不能与 `CLIENT_MIXED_PORT` 相同 | `38102` |
 | `CLIENT_HY2_SOCKS5_PORT` | Hysteria 2 客户端 SOCKS5 端口 | `7891` |
 | `CLIENT_HY2_HTTP_PORT` | Hysteria 2 客户端 HTTP 端口 | `7892` |
 

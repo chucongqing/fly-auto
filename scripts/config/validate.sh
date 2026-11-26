@@ -218,6 +218,12 @@ validate_client_env() {
   if [ "${ENABLE_ANYTLS}" = true ]; then
     require_nonempty CLIENT_ANYTLS_SERVER CLIENT_ANYTLS_PORT CLIENT_ANYTLS_PASSWORD CLIENT_ANYTLS_SERVER_NAME || return
     validate_port CLIENT_ANYTLS_PORT || return
+    require_nonempty CLIENT_MIXED2_LISTEN || return
+    validate_port CLIENT_MIXED2_PORT || return
+    if [ "$CLIENT_MIXED2_PORT" = "$CLIENT_MIXED_PORT" ]; then
+      validation_error "CLIENT_MIXED2_PORT must differ from CLIENT_MIXED_PORT."
+      return
+    fi
   fi
 
   if [ "${ENABLE_WARP}" = true ]; then

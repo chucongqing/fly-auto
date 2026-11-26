@@ -37,6 +37,12 @@
       "tag": "mixed-in",
       "listen": "",
       "listen_port": 0
+    },
+    {
+      "type": "mixed",
+      "tag": "mixed-anytls-in",
+      "listen": "",
+      "listen_port": 0
     }
   ],
   "outbounds": [

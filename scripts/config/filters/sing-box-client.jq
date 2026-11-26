@@ -29,12 +29,14 @@ def enabled($tag):
   ($tag == "anytls" and $enable_anytls == "true");
 
 .
-| .dns.servers = [
-    parse_dns("remote-dns"; $remote_dns; $default_outbound),
-    parse_dns("local-dns"; $local_dns; "")
-  ]
 | .inbounds[0].listen = $mixed_listen
 | .inbounds[0].listen_port = $mixed_port
+| .inbounds[1].listen = $mixed2_listen
+| .inbounds[1].listen_port = $mixed2_port
+| .dns.servers = ([
+    parse_dns("remote-dns"; $remote_dns; $default_outbound),
+    parse_dns("local-dns"; $local_dns; "")
+  ] + if $enable_anytls == "true" then [parse_dns("remote-dns-anytls"; $remote_dns; "anytls")] else [] end)
 | .outbounds |= map(
     if (.tag == "vless" or .tag == "hy2" or .tag == "tuic" or .tag == "anytls") and (enabled(.tag) | not) then
       empty
@@ -80,3 +82,16 @@ def enabled($tag):
     if .clash_mode == "global" then .outbound = $default_outbound else . end
   )
 | .route.final = $default_outbound
+| if $enable_anytls == "true" then
+    # AnyTLS 专用入站：DNS 走 anytls 上的 DoT，流量固定走 anytls（私有网段仍直连）
+    .dns.rules = ([{inbound: ["mixed-anytls-in"], server: "remote-dns-anytls"}] + .dns.rules)
+    | (.route.rules | map(.ip_is_private == true) | index(true)) as $private_index
+    | (if $private_index == null then 2 else $private_index + 1 end) as $split
+    | .route.rules = (
+        .route.rules[0:$split]
+        + [{inbound: ["mixed-anytls-in"], action: "route", outbound: "anytls"}]
+        + .route.rules[$split:]
+      )
+  else
+    .inbounds |= map(select(.tag != "mixed-anytls-in"))
+  end

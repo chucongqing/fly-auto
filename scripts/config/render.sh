@@ -43,6 +43,8 @@ resolve_client_defaults() {
   CLIENT_TUIC_PORT="${CLIENT_TUIC_PORT:-0}"
   CLIENT_ANYTLS_PORT="${CLIENT_ANYTLS_PORT:-0}"
   CLIENT_WARP_PORT="${CLIENT_WARP_PORT:-0}"
+  CLIENT_MIXED2_LISTEN="${CLIENT_MIXED2_LISTEN:-0.0.0.0}"
+  CLIENT_MIXED2_PORT="${CLIENT_MIXED2_PORT:-0}"
 
   ENABLE_VLESS="${ENABLE_VLESS:-false}"
   ENABLE_HY2="${ENABLE_HY2:-false}"
@@ -53,6 +55,7 @@ resolve_client_defaults() {
   export CLIENT_VLESS_SERVER CLIENT_HY2_SERVER CLIENT_TUIC_SERVER CLIENT_ANYTLS_SERVER
   export CLIENT_HY2_SERVER_NAME CLIENT_TUIC_SERVER_NAME CLIENT_ANYTLS_SERVER_NAME
   export CLIENT_VLESS_PORT CLIENT_TUIC_PORT CLIENT_ANYTLS_PORT CLIENT_WARP_PORT
+  export CLIENT_MIXED2_LISTEN CLIENT_MIXED2_PORT
   export ENABLE_VLESS ENABLE_HY2 ENABLE_TUIC ENABLE_ANYTLS ENABLE_WARP
 }
 
@@ -117,6 +120,19 @@ validate_client_json_output() {
     echo "Error: WARP outbound is missing while ENABLE_WARP=true." >&2
     return 1
   fi
+  if [ "$ENABLE_ANYTLS" = true ]; then
+    if ! jq -e '.inbounds | any(.tag == "mixed-anytls-in")' "$file" >/dev/null; then
+      echo "Error: AnyTLS-only inbound 'mixed-anytls-in' is missing." >&2
+      return 1
+    fi
+    if ! jq -e '.route.rules | any(.inbound == ["mixed-anytls-in"] and .outbound == "anytls")' "$file" >/dev/null; then
+      echo "Error: no route rule sends the AnyTLS-only inbound to the anytls outbound." >&2
+      return 1
+    fi
+  elif jq -e '.inbounds | any(.tag == "mixed-anytls-in")' "$file" >/dev/null; then
+    echo "Error: AnyTLS-only inbound remains while ENABLE_ANYTLS=false." >&2
+    return 1
+  fi
 }
 
 render_server() {
@@ -174,6 +190,8 @@ render_client() {
   render_json "$CLIENT_ENV_FILE" "$CLIENT_SINGBOX_TEMPLATE" "$CLIENT_SINGBOX_FILTER" "$staged" \
     --arg mixed_listen "$CLIENT_MIXED_LISTEN" \
     --argjson mixed_port "$(decimal_port "$CLIENT_MIXED_PORT")" \
+    --arg mixed2_listen "$CLIENT_MIXED2_LISTEN" \
+    --argjson mixed2_port "$(decimal_port "$CLIENT_MIXED2_PORT")" \
     --arg vless_server "$CLIENT_VLESS_SERVER" \
     --argjson vless_port "$(decimal_port "$CLIENT_VLESS_PORT")" \
     --arg vless_uuid "${CLIENT_VLESS_UUID:-}" \
